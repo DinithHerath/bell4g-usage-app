@@ -184,7 +184,20 @@ class DataUsageInfoState extends State<DataUsageInfo>
         _buildChart(),
         _buildButtonBar(),
         SizedBox(height: 50.0),
-        _buildRemainingDays()
+        _buildRemainingDays(),
+        FlatButton.icon(
+          textColor: widget.theme.white,
+          label: Text("About"),
+          icon: Icon(FontAwesomeIcons.questionCircle),
+          onPressed: () => showDialog(
+                builder: (_) => AboutDialog(
+                  applicationLegalese: "By kdsuneraavinash\nkdsuneraavinash@gmail.com",
+                  applicationName: "Bell 4G Data Usage",
+                  applicationVersion: "0.2.0-alpha",
+                ),
+                context: context,
+              ),
+        ),
       ],
     );
   }
