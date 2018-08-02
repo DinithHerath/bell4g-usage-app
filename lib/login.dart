@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
-import 'package:bell4g_app/colors.dart' as ColorTheme;
+import 'package:bell4g_app/colors.dart';
 import 'package:bell4g_app/browser.dart';
 
 class LoginPage extends StatefulWidget {
   final VirtualBrowser browser;
 
-  LoginPage(this.browser);
+  LoginPage(this.browser, this.theme);
+  final ColorTheme theme;
 
   @override
   LoginPageState createState() => LoginPageState();
@@ -20,40 +21,43 @@ class LoginPageState extends State<LoginPage> {
 
   /// Dialog builder. The main interface.
   Widget _buildDialog() {
-    return SimpleDialog(
-      children: <Widget>[
-        // Divider between title and Content
-        Divider(color: ColorTheme.black),
-        // Username Text Field
-        Padding(
-          padding: EdgeInsets.all(8.0),
-          child: _buildTextBox(
-              hintText: "Username",
-              helperText: "Bell 4G Account name",
-              icon: Icons.person,
-              onSubmit: _handleTextSubmitted,
-              changeApplyFunc: (s) {
-                this.username = s;
-              }),
-        ),
-        // Password Text Field
-        Padding(
-          padding: EdgeInsets.all(8.0),
-          child: _buildTextBox(
-              hintText: "Password",
-              helperText: "Bell 4G Account password",
-              icon: Icons.lock_outline,
-              isPassword: true,
-              onSubmit: _handleTextSubmitted,
-              changeApplyFunc: (s) {
-                this.password = s;
-              }),
-        ),
-        // Button
-        _buildButton(),
-      ],
-      // Title
-      title: Text("Login to Continue"),
+    return Theme(
+      data: widget.theme.asTheme,
+      child: SimpleDialog(
+        children: <Widget>[
+          // Divider between title and Content
+          Divider(color: widget.theme.black),
+          // Username Text Field
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: _buildTextBox(
+                hintText: "Username",
+                helperText: "Bell 4G Account name",
+                icon: Icons.person,
+                onSubmit: _handleTextSubmitted,
+                changeApplyFunc: (s) {
+                  this.username = s;
+                }),
+          ),
+          // Password Text Field
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: _buildTextBox(
+                hintText: "Password",
+                helperText: "Bell 4G Account password",
+                icon: Icons.lock_outline,
+                isPassword: true,
+                onSubmit: _handleTextSubmitted,
+                changeApplyFunc: (s) {
+                  this.password = s;
+                }),
+          ),
+          // Button
+          _buildButton(),
+        ],
+        // Title
+        title: Text("Login to Continue"),
+      ),
     );
   }
 
@@ -67,13 +71,16 @@ class LoginPageState extends State<LoginPage> {
         children: <Widget>[
           Padding(
             padding: EdgeInsets.only(right: 16.0),
-            child: loading ? CircularProgressIndicator() : Container(),
+            child: loading
+                ? CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation(widget.theme.secondaryColor),
+                  )
+                : Container(),
           ),
           RaisedButton.icon(
             icon: Icon(Icons.arrow_forward),
             label: Text("Next"),
-            color: ColorTheme.primaryColor,
-            colorBrightness: Brightness.dark,
             onPressed: _handleTextSubmitted,
           ),
         ],
@@ -95,7 +102,11 @@ class LoginPageState extends State<LoginPage> {
   }) {
     return TextField(
       decoration: InputDecoration(
-          icon: CircleAvatar(child: Icon(icon)),
+          icon: CircleAvatar(
+              child: Icon(
+            icon,
+            color: widget.theme.white,
+          )),
           hintText: hintText,
           helperText: helperText,
           errorText: this.wrongInputs ? "Invalid Username/Password" : null),

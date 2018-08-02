@@ -236,6 +236,36 @@ class Bell4GInfo {
       formatDataToString(this.remainingDataDay);
   String get formattedRemainingNightData =>
       formatDataToString(this.remainingDataNight);
+  DateTime get formattedNextBillDate {
+    if (this.profileNextBillDate == "-") {
+      return DateTime.now();
+    } else {
+      List<String> date = this.profileNextBillDate.split(" ")[0].split("/");
+      String time = this.profileNextBillDate.split(" ")[1];
+      return DateTime.parse("${date[2]}-${date[1]}-${date[0]} $time");
+    }
+  }
+
+  int get daysPerPackage {
+    int month = this.formattedNextBillDate.month;
+    int year = this.formattedNextBillDate.year;
+    if (month == 2) {
+      // February
+      if (year % 400 == 0) {
+        return 29;
+      } else if (year % 100 == 0) {
+        return 28;
+      } else if (year % 4 == 0) {
+        return 29;
+      } else {
+        return 28;
+      }
+    } else if ([1, 3, 5, 7, 8, 10, 12].contains(month)) {
+      return 31;
+    } else {
+      return 30;
+    }
+  }
 
   /// Data to String (23234.12 => 23.234 KB)
   static String formatDataToString(double data) {

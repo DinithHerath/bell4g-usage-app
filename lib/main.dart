@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:bell4g_app/colors.dart' as ColorTheme;
+import 'package:bell4g_app/colors.dart';
 import 'package:bell4g_app/browser.dart';
 import 'package:bell4g_app/startup.dart';
 
@@ -14,15 +14,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primaryColor: ColorTheme.primaryColor,
-        accentColor: ColorTheme.accentColor,
-        primaryColorDark: ColorTheme.secondaryColor,
-      ),
-      home: StartUpPage(browser),
+      home: StartUpPage(browser, theme),
     );
   }
 
   final VirtualBrowser browser;
+  final ColorTheme theme = ColorTheme.lightTheme();
   MyApp(this.browser);
 }

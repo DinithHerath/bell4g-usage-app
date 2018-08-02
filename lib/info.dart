@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_circular_chart/flutter_circular_chart.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import 'package:bell4g_app/colors.dart' as ColorTheme;
+import 'package:bell4g_app/colors.dart';
 import 'package:bell4g_app/browser.dart';
 import 'package:bell4g_app/startup.dart';
 import 'package:bell4g_app/transition_maker.dart';
@@ -18,52 +18,42 @@ class DataUsageInfo extends StatefulWidget {
   @override
   DataUsageInfoState createState() => DataUsageInfoState();
 
-  /// Function to create chart data using used data and remaining data
-  static List<CircularStackEntry> createChartData(
-      double used, double remaining) {
-    return <CircularStackEntry>[
-      CircularStackEntry(
-        <CircularSegmentEntry>[
-          CircularSegmentEntry(used, ColorTheme.chartRed,
-              rankKey: CHART_USED_KEY),
-          CircularSegmentEntry(remaining, ColorTheme.chartGreen,
-              rankKey: CHART_REMAINING_KEY),
-        ],
-        rankKey: CHART_SERIES_KEY,
-      ),
-    ];
-  }
-
-  // Initial state
-  final List<CircularStackEntry> initData = createChartData(0.0, 100.0);
   // Browser
   final VirtualBrowser browser;
-  DataUsageInfo(this.browser);
+  DataUsageInfo(this.browser, this.theme);
+  final ColorTheme theme;
 }
 
 class DataUsageInfoState extends State<DataUsageInfo>
     with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: ColorTheme.primaryColor,
-        appBar: _buildAppBar(),
-        body: TabBarView(
-          children: <Widget>[
-            _buildHomePage(),
-            _buildProfilePage(),
-          ],
-        ),
-        floatingActionButton: FloatingActionButton(
-          child: RotationTransition(
-            child: Icon(Icons.refresh),
-            turns: Tween(begin: 0.0, end: 1.0)
-                .animate(refreshRotationAnimationController),
+    return Theme(
+      data: widget.theme.asTheme,
+      child: DefaultTabController(
+        length: 3,
+        child: Scaffold(
+          appBar: _buildAppBar(),
+          body: TabBarView(
+            children: <Widget>[
+              _buildHomePage(),
+              // User home data
+              _buildHomeDataTimes(),
+              _buildProfileDataTiles(),
+            ],
           ),
-          onPressed: _handleOnPressedRefresh,
-          backgroundColor: ColorTheme.black,
+          floatingActionButton: FloatingActionButton(
+            child: RotationTransition(
+              child: Icon(
+                Icons.refresh,
+                color: widget.theme.white,
+              ),
+              turns: Tween(begin: 0.0, end: 1.0)
+                  .animate(refreshRotationAnimationController),
+            ),
+            onPressed: _handleOnPressedRefresh,
+            backgroundColor: widget.theme.black,
+          ),
         ),
       ),
     );
@@ -72,16 +62,30 @@ class DataUsageInfoState extends State<DataUsageInfo>
   /// App Bar
   AppBar _buildAppBar() {
     return AppBar(
-      title: Text("Bell 4G Data Usage"),
-      actions: <Widget>[
-        IconButton(
-          icon: Icon(FontAwesomeIcons.signOutAlt),
-          onPressed: _handleOnPressedLogout,
-          tooltip: "Sign Out",
-        )
-      ],
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          FlatButton.icon(
+            label: Text(widget.theme.themeName),
+            icon: Icon(widget.theme.themeIcon),
+            onPressed: () {
+              widget.theme.switchTheme();
+              // Refreshes Chart data (To switch colors)
+              // This also calls setState() so no need to call again
+              refreshChartData();
+            },
+            textColor: widget.theme.white,
+          ),
+          FlatButton.icon(
+            label: Text("Sign Out"),
+            icon: Icon(FontAwesomeIcons.signOutAlt),
+            onPressed: _handleOnPressedLogout,
+            textColor: widget.theme.white,
+          )
+        ],
+      ),
       bottom: TabBar(
-        indicatorColor: ColorTheme.secondaryColor,
+        indicatorColor: widget.theme.secondaryColor,
         tabs: <Widget>[
           Padding(
             padding: EdgeInsets.all(8.0),
@@ -89,7 +93,11 @@ class DataUsageInfoState extends State<DataUsageInfo>
           ),
           Padding(
             padding: EdgeInsets.all(8.0),
-            child: Icon(Icons.supervised_user_circle),
+            child: Icon(Icons.info_outline),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Icon(Icons.person_pin),
           )
         ],
       ),
@@ -104,7 +112,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
       return SizedBox(
         child: Center(
           child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation(ColorTheme.secondaryColor),
+            valueColor: AlwaysStoppedAnimation(widget.theme.secondaryColor),
           ),
         ),
         width: chartWidth,
@@ -117,15 +125,30 @@ class DataUsageInfoState extends State<DataUsageInfo>
       size: Size(chartWidth, chartWidth),
       // This is here just to fix bug when chart refreshed to initial values when goes out of screen
       initialChartData: dayTimeSelected
-          ? DataUsageInfo.createChartData(
+          ? createChartData(
               currentInfo.usedDataDay, currentInfo.remainingDataDay)
-          : DataUsageInfo.createChartData(
+          : createChartData(
               currentInfo.usedDataNight, currentInfo.remainingDataNight),
       chartType: CircularChartType.Radial,
       duration: Duration(milliseconds: 500),
       holeLabel: _buildCenterText(),
-      labelStyle: TextStyle(color: ColorTheme.white, fontSize: 24.0),
+      labelStyle: TextStyle(color: widget.theme.white, fontSize: 24.0),
     );
+  }
+
+  /// Function to create chart data using used data and remaining data
+  List<CircularStackEntry> createChartData(double used, double remaining) {
+    return <CircularStackEntry>[
+      CircularStackEntry(
+        <CircularSegmentEntry>[
+          CircularSegmentEntry(used, widget.theme.chartRed,
+              rankKey: CHART_USED_KEY),
+          CircularSegmentEntry(remaining, widget.theme.chartGreen,
+              rankKey: CHART_REMAINING_KEY),
+        ],
+        rankKey: CHART_SERIES_KEY,
+      ),
+    ];
   }
 
   /// Pill like buttons to toggle between day time and night time
@@ -160,27 +183,90 @@ class DataUsageInfoState extends State<DataUsageInfo>
       children: <Widget>[
         _buildChart(),
         _buildButtonBar(),
-        // User home data
-        _buildHomeDataTimes(),
+        SizedBox(height: 50.0),
+        _buildRemainingDays()
       ],
     );
   }
 
-  Widget _buildProfilePage() {
-    return ListView(
-      children: <Widget>[
-        // User profile data
-        _buildProfileDataTiles(),
-      ],
+  Widget _buildRemainingDays() {
+    Duration remainingDays =
+        this.currentInfo.formattedNextBillDate.difference(DateTime.now());
+    String allocationDayTime = Bell4GInfo.formatDataToString(double.parse(
+        (this.currentInfo.remainingDataDay / remainingDays.inDays)
+            .toStringAsPrecision(3)));
+    String allocationNightTime = Bell4GInfo.formatDataToString(double.parse(
+        (this.currentInfo.remainingDataNight / remainingDays.inDays)
+            .toStringAsPrecision(3)));
+    return Center(
+      child: Column(
+        children: <Widget>[
+          _buildLargeText(
+            text: "${remainingDays.inDays} DAYS",
+            fontSize: 72.0,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 8.0,
+          ),
+          _buildLargeText(
+            text:
+                "AND ${(remainingDays - Duration(days: remainingDays.inDays)).inHours} HOURS",
+            fontSize: 24.0,
+            fontWeight: FontWeight.w300,
+            letterSpacing: 10.0,
+          ),
+          _buildLargeText(
+            text: "Remaining till new package",
+            fontWeight: FontWeight.w400,
+            letterSpacing: 3.0,
+          ),
+          SizedBox(height: 50.0),
+          _buildLargeText(
+            text: "$allocationDayTime",
+            fontWeight: FontWeight.w600,
+            letterSpacing: 10.0,
+            fontSize: 36.0,
+          ),
+          _buildLargeText(
+            text: "Allocation per Day Time",
+            fontWeight: FontWeight.w400,
+            letterSpacing: 3.0,
+          ),
+          SizedBox(height: 25.0),
+          _buildLargeText(
+              text: "$allocationNightTime",
+              fontWeight: FontWeight.w600,
+              letterSpacing: 10.0,
+              fontSize: 36.0),
+          _buildLargeText(
+            text: "Allocation per Night Time",
+            fontWeight: FontWeight.w400,
+            letterSpacing: 3.0,
+          ),
+          SizedBox(height: 50.0),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLargeText(
+      {String text,
+      FontWeight fontWeight,
+      double letterSpacing,
+      double fontSize}) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontWeight: fontWeight,
+        letterSpacing: letterSpacing,
+        fontSize: fontSize,
+      ),
     );
   }
 
   /// View data scraped from home page as tiles
   Widget _buildHomeDataTimes() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return ListView(
       children: <Widget>[
-        Divider(color: ColorTheme.white),
         _buildInfoTile(this.currentInfo.activatedPackage, "Activated Package",
             FontAwesomeIcons.shoppingBag),
         _buildInfoTile(this.currentInfo.packageValue, "Package Value",
@@ -201,8 +287,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
 
   /// View data scraped from profile page as tiles
   Widget _buildProfileDataTiles() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return ListView(
       children: <Widget>[
         _buildInfoTile(
             this.currentInfo.profileName, "Name", FontAwesomeIcons.userAlt),
@@ -220,8 +305,6 @@ class DataUsageInfoState extends State<DataUsageInfo>
             FontAwesomeIcons.shoppingBasket),
         _buildInfoTile(this.currentInfo.profileNextBillDate,
             "Next Bill/Quota Issue Date", FontAwesomeIcons.calendar),
-        _buildInfoTile(this.currentInfo.profileLoginName, "Login Name",
-            FontAwesomeIcons.user),
       ],
     );
   }
@@ -232,19 +315,12 @@ class DataUsageInfoState extends State<DataUsageInfo>
       leading: CircleAvatar(
         child: Icon(
           icon,
-          color: ColorTheme.black,
           size: 18.0,
+          color: widget.theme.white,
         ),
-        backgroundColor: ColorTheme.white,
       ),
-      title: Text(
-        title,
-        style: TextStyle(color: ColorTheme.white),
-      ),
-      subtitle: Text(
-        value,
-        style: TextStyle(color: ColorTheme.white),
-      ),
+      title: Text(title),
+      subtitle: Text(value),
     );
   }
 
@@ -261,7 +337,9 @@ class DataUsageInfoState extends State<DataUsageInfo>
   void _handleOnPressedLogout() {
     widget.browser.clearCookie();
     TransitionMaker
-        .slideTransition(destinationPageCall: () => StartUpPage(widget.browser))
+        .slideTransition(
+            destinationPageCall: () =>
+                StartUpPage(widget.browser, widget.theme))
         .startNoBack(context);
   }
 
@@ -304,8 +382,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
       used = currentInfo.usedDataNight;
       remaining = currentInfo.remainingDataNight;
     }
-    List<CircularStackEntry> nextData =
-        DataUsageInfo.createChartData(used, remaining);
+    List<CircularStackEntry> nextData = createChartData(used, remaining);
     setState(() {
       if (_chartKey.currentState != null) {
         _chartKey.currentState.updateData(nextData);
