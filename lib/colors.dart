@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 enum Themes { DARK, LIGHT, BELL4G, ORANGE }
 
+const String THEME_KEY = "theme";
+const String THEME_DARK_KEY = "Themes.DARK";
+const String THEME_LIGHT_KEY = "Themes.LIGHT";
+const String THEME_ORANGE_KEY = "Themes.BELL4G";
+const String THEME_BELL4G_KEY = "Themes.ORANGE";
+
+/// Class to change themes and store theme and color details
 class ColorTheme {
   Color primaryColor;
   Color scaffoldBackColor;
@@ -15,8 +23,11 @@ class ColorTheme {
   Color whiteGrey;
   Color black;
   Themes currentTheme;
+  // To save current theme
+  FlutterSecureStorage _storage = FlutterSecureStorage();
 
-  void switchToLightTheme() {
+  /// Switch and save current theme
+  void switchToLightTheme([bool save = true]) {
     this.currentTheme = Themes.LIGHT;
     this.primaryColor = Color(0xffffffff);
     this.scaffoldBackColor = Color(0xffffffff);
@@ -27,9 +38,11 @@ class ColorTheme {
     this.white = Color(0xff000000);
     this.whiteGrey = Color(0xff455A64);
     this.black = Color(0xffffffff);
+    if (save) _storage.write(key: THEME_KEY, value: THEME_LIGHT_KEY);
   }
 
-  void switchToOrangeTheme() {
+  /// Switch and save current theme
+  void switchToOrangeTheme([bool save = true]) {
     this.currentTheme = Themes.ORANGE;
     this.primaryColor = Color(0xffFF5722);
     this.scaffoldBackColor = Color(0xffFBE9E7);
@@ -40,9 +53,11 @@ class ColorTheme {
     this.white = Color(0xff000000);
     this.whiteGrey = Color(0xffE0E0E0);
     this.black = Color(0xffffffff);
+    if (save) _storage.write(key: THEME_KEY, value: THEME_ORANGE_KEY);
   }
 
-  void switchToDarkTheme() {
+  /// Switch and save current theme
+  void switchToDarkTheme([bool save = true]) {
     this.currentTheme = Themes.DARK;
     this.primaryColor = Color(0xff39424e);
     this.scaffoldBackColor = Color(0xff39424e);
@@ -53,12 +68,14 @@ class ColorTheme {
     this.white = Color(0xffffffff);
     this.whiteGrey = Color(0xffE0E0E0);
     this.black = Color(0xff000000);
+    if (save) _storage.write(key: THEME_KEY, value: THEME_DARK_KEY);
   }
 
-  void switchToBell4GTheme() {
+  /// Switch and save current theme
+  void switchToBell4GTheme([bool save = true]) {
     this.currentTheme = Themes.BELL4G;
     this.primaryColor = Color(0xff52a2c7);
-    this.scaffoldBackColor = Color(0xffffffff);
+    this.scaffoldBackColor = Color(0xfff2f2f2);
     this.accentColor = Color(0x4439424e);
     this.secondaryColor = Color(0xfff7d82f);
     this.chartRed = Color(0xffff0000);
@@ -66,8 +83,10 @@ class ColorTheme {
     this.white = Color(0xff000000);
     this.whiteGrey = Color(0xff455A64);
     this.black = Color(0xffffffff);
+    if (save) _storage.write(key: THEME_KEY, value: THEME_BELL4G_KEY);
   }
 
+  /// Cycle current theme
   void switchTheme() {
     switch (this.currentTheme) {
       case Themes.LIGHT:
@@ -85,6 +104,7 @@ class ColorTheme {
     }
   }
 
+  /// Get the name of theme
   String get themeName {
     switch (this.currentTheme) {
       case Themes.LIGHT:
@@ -103,6 +123,7 @@ class ColorTheme {
     }
   }
 
+  /// Get theme icon
   IconData get themeIcon {
     switch (this.currentTheme) {
       case Themes.LIGHT:
@@ -121,6 +142,7 @@ class ColorTheme {
     }
   }
 
+  /// Convert current colors to a [ThemeData] object.
   ThemeData get asTheme => ThemeData(
       primaryColor: this.primaryColor,
       accentColor: this.accentColor,
@@ -144,13 +166,28 @@ class ColorTheme {
         helperStyle: TextStyle(color: this.whiteGrey),
       ));
 
-  ColorTheme();
-
-  factory ColorTheme.lightTheme() {
-    return ColorTheme()..switchToLightTheme();
+  /// Load previous theme and apply it
+  void applyStoredTheme() async {
+    String theme = await _storage.read(key: THEME_KEY);
+    switch (theme) {
+      case THEME_ORANGE_KEY:
+        this.switchToOrangeTheme();
+        break;
+      case THEME_DARK_KEY:
+        this.switchToDarkTheme();
+        break;
+      case THEME_BELL4G_KEY:
+        this.switchToBell4GTheme();
+        break;
+      case THEME_LIGHT_KEY:
+        this.switchToLightTheme();
+        break;
+    }
   }
 
-  factory ColorTheme.darkTheme() {
-    return ColorTheme()..switchToDarkTheme();
+  /// Default theme. However must not save this when loaded. 
+  /// So passes [false].
+  ColorTheme() {
+    this.switchToDarkTheme(false);
   }
 }

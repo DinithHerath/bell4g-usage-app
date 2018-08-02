@@ -19,6 +19,6 @@ class MyApp extends StatelessWidget {
   }
 
   final VirtualBrowser browser;
-  final ColorTheme theme = ColorTheme.lightTheme();
+  final ColorTheme theme = ColorTheme();
   MyApp(this.browser);
 }

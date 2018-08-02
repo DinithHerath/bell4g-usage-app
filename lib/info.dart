@@ -178,6 +178,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
     );
   }
 
+  /// Main screen containing chart and texts
   Widget _buildHomePage() {
     return ListView(
       children: <Widget>[
@@ -202,6 +203,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
     );
   }
 
+  /// Remaining days and data info
   Widget _buildRemainingDays() {
     Duration remainingDays =
         this.currentInfo.formattedNextBillDate.difference(DateTime.now());
@@ -261,6 +263,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
     );
   }
 
+  /// Text builder for [_buildRemainingDays]
   Widget _buildLargeText(
       {String text,
       FontWeight fontWeight,
@@ -356,6 +359,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
         .startNoBack(context);
   }
 
+  /// Refreshing FAB action
   void _handleOnPressedRefresh() async {
     refreshRotationAnimationController.repeat();
     await updateChart();

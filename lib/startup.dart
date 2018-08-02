@@ -4,7 +4,7 @@ import 'package:bell4g_app/browser.dart';
 import 'package:bell4g_app/info.dart';
 import 'package:bell4g_app/login.dart';
 import 'package:bell4g_app/colors.dart';
-import 'transition_maker.dart';
+import 'package:bell4g_app/transition_maker.dart';
 
 class StartUpPage extends StatefulWidget {
   @override
@@ -60,6 +60,7 @@ class StartUpPageState extends State<StartUpPage> {
   @override
   void initState() {
     super.initState();
+    widget.theme.applyStoredTheme();
     _handleTransition();
   }
 }
