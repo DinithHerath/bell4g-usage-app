@@ -45,59 +45,26 @@ class DataUsageInfoState extends State<DataUsageInfo>
     with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ColorTheme.primaryColor,
-      appBar: _buildAppBar(),
-      body: ListView(
-        children: <Widget>[
-          _buildChart(),
-          _buildButtonBar(),
-          // User home data
-          Divider(color: ColorTheme.white),
-          _buildInfoTile(this.currentInfo.activatedPackage, "Activated Package",
-              FontAwesomeIcons.shoppingBag),
-          _buildInfoTile(this.currentInfo.packageValue, "Package Value",
-              FontAwesomeIcons.shoppingCart),
-          _buildInfoTile(this.currentInfo.packageDownSpeed,
-              "Max Download Speed", FontAwesomeIcons.download),
-          _buildInfoTile(this.currentInfo.packageUpSpeed, "Max Upload Speed",
-              FontAwesomeIcons.upload),
-          _buildInfoTile(this.currentInfo.totalOutstanding, "Total Outstanding",
-              FontAwesomeIcons.dollarSign),
-          _buildInfoTile(this.currentInfo.lastPaymentAmount,
-              "Last Payment Amount", FontAwesomeIcons.wallet),
-          _buildInfoTile(this.currentInfo.lastPaymentDate,
-              "Last Payment Date and Time", FontAwesomeIcons.calendar),
-          // User profile data
-          Divider(color: ColorTheme.white),
-          _buildInfoTile(
-              this.currentInfo.profileName, "Name", FontAwesomeIcons.userAlt),
-          _buildInfoTile(this.currentInfo.profileEmail, "E-mail",
-              FontAwesomeIcons.googlePlusG),
-          _buildInfoTile(this.currentInfo.profileMobileNumber, "Mobile Number",
-              FontAwesomeIcons.mobile),
-          _buildInfoTile(this.currentInfo.profileAddress, "Address",
-              FontAwesomeIcons.addressBook),
-          _buildInfoTile(this.currentInfo.profileDirectoryNumber,
-              "Directory Number", FontAwesomeIcons.phone),
-          _buildInfoTile(this.currentInfo.profileAccounNumber, "Account Number",
-              FontAwesomeIcons.userLock),
-          _buildInfoTile(this.currentInfo.activatedPackage, "Active Package",
-              FontAwesomeIcons.shoppingBasket),
-          _buildInfoTile(this.currentInfo.profileNextBillDate,
-              "Next Bill/Quota Issue Date", FontAwesomeIcons.calendar),
-          _buildInfoTile(this.currentInfo.profileLoginName, "Login Name",
-              FontAwesomeIcons.user),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: RotationTransition(
-          child: Icon(Icons.refresh),
-          turns: Tween(begin: 0.0, end: 1.0)
-              .animate(refreshRotationAnimationController),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: ColorTheme.primaryColor,
+        appBar: _buildAppBar(),
+        body: TabBarView(
+          children: <Widget>[
+            _buildHomePage(),
+            _buildProfilePage(),
+          ],
         ),
-        onPressed: _handleOnPressedRefresh,
-        backgroundColor: ColorTheme.black,
+        floatingActionButton: FloatingActionButton(
+          child: RotationTransition(
+            child: Icon(Icons.refresh),
+            turns: Tween(begin: 0.0, end: 1.0)
+                .animate(refreshRotationAnimationController),
+          ),
+          onPressed: _handleOnPressedRefresh,
+          backgroundColor: ColorTheme.black,
+        ),
       ),
     );
   }
@@ -113,17 +80,43 @@ class DataUsageInfoState extends State<DataUsageInfo>
           tooltip: "Sign Out",
         )
       ],
+      bottom: TabBar(
+        indicatorColor: ColorTheme.secondaryColor,
+        tabs: <Widget>[
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Icon(Icons.data_usage),
+          ),
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Icon(Icons.supervised_user_circle),
+          )
+        ],
+      ),
     );
   }
 
   /// Pie/Radial Chart
   Widget _buildChart() {
-    double phoneWidth = MediaQuery.of(context).size.width;
+    double chartWidth = MediaQuery.of(context).size.width * 0.75;
+    // If data is still not loaded show a progess indicatr instaead
+    if (this.isInitial) {
+      return SizedBox(
+        child: Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation(ColorTheme.secondaryColor),
+          ),
+        ),
+        width: chartWidth,
+        height: chartWidth,
+      );
+    }
+    // If data is loaded show the Chart
     return AnimatedCircularChart(
       key: this._chartKey,
-      size: Size(phoneWidth * 0.75, phoneWidth * 0.75),
+      size: Size(chartWidth, chartWidth),
       // This is here just to fix bug when chart refreshed to initial values when goes out of screen
-      initialChartData: isDay
+      initialChartData: dayTimeSelected
           ? DataUsageInfo.createChartData(
               currentInfo.usedDataDay, currentInfo.remainingDataDay)
           : DataUsageInfo.createChartData(
@@ -148,35 +141,88 @@ class DataUsageInfoState extends State<DataUsageInfo>
               child: Text("Day Time"),
               width: 70.0,
             ),
-            onPressed: isDay ? null : _handleOnPressedCycle,
+            onPressed: dayTimeSelected ? null : _handleOnPressedCycle,
           ),
           RaisedButton(
             child: SizedBox(
               child: Text("Night Time"),
               width: 70.0,
             ),
-            onPressed: isDay ? _handleOnPressedCycle : null,
+            onPressed: dayTimeSelected ? _handleOnPressedCycle : null,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRemainingDays() {
-    return Padding(
-      padding: EdgeInsets.all(8.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text(
-              "05:04:03:23",
-              style: TextStyle(fontSize: 32.0, color: ColorTheme.white),
-            ),
-          ),
-        ],
-      ),
+  Widget _buildHomePage() {
+    return ListView(
+      children: <Widget>[
+        _buildChart(),
+        _buildButtonBar(),
+        // User home data
+        _buildHomeDataTimes(),
+      ],
+    );
+  }
+
+  Widget _buildProfilePage() {
+    return ListView(
+      children: <Widget>[
+        // User profile data
+        _buildProfileDataTiles(),
+      ],
+    );
+  }
+
+  /// View data scraped from home page as tiles
+  Widget _buildHomeDataTimes() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        Divider(color: ColorTheme.white),
+        _buildInfoTile(this.currentInfo.activatedPackage, "Activated Package",
+            FontAwesomeIcons.shoppingBag),
+        _buildInfoTile(this.currentInfo.packageValue, "Package Value",
+            FontAwesomeIcons.shoppingCart),
+        _buildInfoTile(this.currentInfo.packageDownSpeed, "Max Download Speed",
+            FontAwesomeIcons.download),
+        _buildInfoTile(this.currentInfo.packageUpSpeed, "Max Upload Speed",
+            FontAwesomeIcons.upload),
+        _buildInfoTile(this.currentInfo.totalOutstanding, "Total Outstanding",
+            FontAwesomeIcons.dollarSign),
+        _buildInfoTile(this.currentInfo.lastPaymentAmount,
+            "Last Payment Amount", FontAwesomeIcons.wallet),
+        _buildInfoTile(this.currentInfo.lastPaymentDate,
+            "Last Payment Date and Time", FontAwesomeIcons.calendar),
+      ],
+    );
+  }
+
+  /// View data scraped from profile page as tiles
+  Widget _buildProfileDataTiles() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        _buildInfoTile(
+            this.currentInfo.profileName, "Name", FontAwesomeIcons.userAlt),
+        _buildInfoTile(this.currentInfo.profileEmail, "E-mail",
+            FontAwesomeIcons.googlePlusG),
+        _buildInfoTile(this.currentInfo.profileMobileNumber, "Mobile Number",
+            FontAwesomeIcons.mobile),
+        _buildInfoTile(this.currentInfo.profileAddress, "Address",
+            FontAwesomeIcons.addressBook),
+        _buildInfoTile(this.currentInfo.profileDirectoryNumber,
+            "Directory Number", FontAwesomeIcons.phone),
+        _buildInfoTile(this.currentInfo.profileAccounNumber, "Account Number",
+            FontAwesomeIcons.userLock),
+        _buildInfoTile(this.currentInfo.activatedPackage, "Active Package",
+            FontAwesomeIcons.shoppingBasket),
+        _buildInfoTile(this.currentInfo.profileNextBillDate,
+            "Next Bill/Quota Issue Date", FontAwesomeIcons.calendar),
+        _buildInfoTile(this.currentInfo.profileLoginName, "Login Name",
+            FontAwesomeIcons.user),
+      ],
     );
   }
 
@@ -204,7 +250,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
 
   /// Text in middle of Chart
   String _buildCenterText() {
-    if (isDay) {
+    if (dayTimeSelected) {
       return "Day Time\n${this.currentInfo.formattedRemainingDayData}";
     } else {
       return "Night Time\n  ${this.currentInfo.formattedRemainingNightData}";
@@ -228,7 +274,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
   /// Handle Pill Buttons to Switch between day and Night
   void _handleOnPressedCycle() {
     setState(() {
-      isDay = !isDay;
+      dayTimeSelected = !dayTimeSelected;
     });
     refreshChartData();
   }
@@ -243,12 +289,15 @@ class DataUsageInfoState extends State<DataUsageInfo>
       this.currentInfo = info;
       refreshChartData();
     }
+    setState(() {
+      this.isInitial = false;
+    });
   }
 
   /// Refreshed chart (Called after changing day time/ night time)
   void refreshChartData() {
     double used, remaining;
-    if (isDay) {
+    if (dayTimeSelected) {
       used = currentInfo.usedDataDay;
       remaining = currentInfo.remainingDataDay;
     } else {
@@ -275,6 +324,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
   AnimationController refreshRotationAnimationController;
   final GlobalKey<AnimatedCircularChartState> _chartKey =
       GlobalKey<AnimatedCircularChartState>();
-  bool isDay = true;
   Bell4GInfo currentInfo = Bell4GInfo();
+  bool isInitial = true;
+  bool dayTimeSelected = true;
 }
