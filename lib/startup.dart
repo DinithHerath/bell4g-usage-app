@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bell4g_app/browser.dart';
 import 'package:bell4g_app/info.dart';
-import 'package:bell4g_app/login.dart';
+import 'package:bell4g_app/login/login.dart';
 import 'package:bell4g_app/colors.dart';
 import 'package:bell4g_app/transition_maker.dart';
 
@@ -40,7 +40,7 @@ class StartUpPageState extends State<StartUpPage> {
       // If not logged in try to gain permission by showing login window
       success = await showDialog(
         context: context,
-        builder: (context) => LoginPage(widget.browser, widget.theme),
+        builder: (context) => LoginPage(),
       );
       // If nothing passed back (window closed by user) set success to false
       success ??= false;

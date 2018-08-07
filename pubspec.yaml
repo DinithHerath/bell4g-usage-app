@@ -12,6 +12,8 @@ dependencies:
   html: ^0.13.3
   # Icon Pack
   font_awesome_flutter: ^7.1.0
+  # RXDart to take advantage of BehaviorSubject
+  rxdart: ^0.18.1
 
 dev_dependencies:
   flutter_test:
