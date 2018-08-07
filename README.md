@@ -55,4 +55,11 @@ Problem with Bell 4G site is that it discards session after some time. So stayin
 
 Login name and password will be taken using a login screen and will be saved in a secure storage location. Confirming login details will be done by logging in and then going to another page(in this case `usage.jsp`) and finding a certain string(`USAGE`) there.
 
+## Tasks
+
+- [ ] Day time and Night time data calculation is wrong
+- [ ] Show something when data available is 0 (Currently shows NaN)
+- [ ] Change UI to show when addition data is purchased
+- [ ] Add `BLoC` pattern to business logic
+
 > Author: kdsuneraavinash
