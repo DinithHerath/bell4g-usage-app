@@ -12,7 +12,6 @@ class DataPersist {
   FlutterSecureStorage storage = FlutterSecureStorage();
 
   void deleteData({bool userdata = false, bool themedata = false}) {
-    FlutterSecureStorage storage = FlutterSecureStorage();
     if (userdata) {
       storage.delete(key: usernameSaveKey);
       storage.delete(key: passwordSaveKey);
@@ -23,7 +22,6 @@ class DataPersist {
   }
 
   void saveData({String username, String password, String themedata}) {
-    FlutterSecureStorage storage = FlutterSecureStorage();
     if (username != null) storage.write(key: usernameSaveKey, value: username);
     if (username != null) storage.write(key: passwordSaveKey, value: password);
     if (themedata != null) storage.write(key: themeKey, value: themedata);
