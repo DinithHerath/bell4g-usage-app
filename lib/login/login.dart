@@ -1,3 +1,4 @@
+import 'package:bell4g_app/colors.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bell4g_app/login/login_bloc.dart';
@@ -13,15 +14,20 @@ class LoginPageState extends State<LoginPage> {
   /// Dialog builder. The main interface.
   @override
   Widget build(BuildContext context) {
-    return SimpleDialog(
+    return Stack(
       children: <Widget>[
-        // Divider between title and Content
-        _buildUsernameText(),
-        _buildPasswordText(),
-        _buildButton(),
+        SimpleDialog(
+          children: <Widget>[
+            // Divider between title and Content
+            _buildUsernameText(),
+            _buildPasswordText(),
+            _buildButton(),
+          ],
+          // Title
+          title: Text("Login to Continue"),
+        ),
+        _buildTopLoadingLayer(),
       ],
-      // Title
-      title: Text("Login to Continue"),
     );
   }
 
@@ -35,6 +41,26 @@ class LoginPageState extends State<LoginPage> {
   void dispose() {
     super.dispose();
     widget.loginBloc.dispose();
+  }
+
+  Widget _buildTopLoadingLayer() {
+    return StreamBuilder<NetworkLoadingType>(
+      stream: widget.loginBloc.getWhetherLoading,
+      builder: (_, isLoadingSnapshot) {
+        return (isLoadingSnapshot?.data != null &&
+                isLoadingSnapshot.data == NetworkLoadingType.doneLoading)
+            ? Container()
+            : Opacity(
+                child: Container(
+                  color: ColorTheme().primaryColor,
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                opacity: 0.8,
+              );
+      },
+    );
   }
 
   /// Username Text Field
@@ -78,31 +104,17 @@ class LoginPageState extends State<LoginPage> {
   /// Builds the button, Will contain a Progess Indicator inline.
   /// It will show when [loading] is [true]
   Widget _buildButton() {
-    return StreamBuilder<bool>(
-      stream: widget.loginBloc.getWhetherLoading,
-      builder: (_, isLoadingSnapshot) {
-        return Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: <Widget>[
-              Padding(
-                padding: EdgeInsets.only(right: 16.0),
-                child:
-                    (isLoadingSnapshot?.data != null && isLoadingSnapshot.data)
-                        ? CircularProgressIndicator()
-                        : Container(),
-              ),
-              RaisedButton.icon(
-                icon: Icon(Icons.arrow_forward),
-                label: Text("Next"),
-                onPressed: () =>
-                    widget.loginBloc.logIn.add(LoginType.useCurrentCredentials),
-              ),
-            ],
-          ),
-        );
-      },
+    return Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Align(
+        alignment: Alignment.bottomRight,
+        child: RaisedButton.icon(
+          icon: Icon(Icons.arrow_forward),
+          label: Text("Next"),
+          onPressed: () =>
+              widget.loginBloc.logIn.add(LoginType.useCurrentCredentials),
+        ),
+      ),
     );
   }
 }

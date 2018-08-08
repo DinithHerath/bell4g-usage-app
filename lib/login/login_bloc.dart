@@ -5,16 +5,16 @@ import 'package:rxdart/rxdart.dart';
 import 'package:bell4g_app/browser/browser.dart' as browser;
 import 'package:bell4g_app/storage/data_persist.dart';
 
-enum LoginType{
-  useStoredCredentials, useCurrentCredentials
-}
+enum LoginType { useStoredCredentials, useCurrentCredentials }
+
+enum NetworkLoadingType { loadingFromInternet, doneLoading }
 
 /// Business Logic Component to Login page.
 /// This will,
 /// - capture texts in username, password text fields
 /// - issue values concerning entered text is invalid or loading
 /// - login using saved username/password of entered username.password
-/// 
+///
 /// FIXME: When state updates through hot reload, [_username] and [_password] empties
 /// even though [TextBox] doesn't. So tapping on [Next] will cause in `Empty Field`.
 class LoginBLoC {
@@ -45,7 +45,8 @@ class LoginBLoC {
   static const validInput = "";
 
   /// Stream to get whether a network call is running.
-  final _isLoadingValueUpdateStream = BehaviorSubject<bool>(seedValue: false);
+  final _isLoadingValueUpdateStream = BehaviorSubject<NetworkLoadingType>(
+      seedValue: NetworkLoadingType.doneLoading);
 
   /// Add to this sink to login using a [username] and a [password]
   Sink<LoginType> get logIn => _loginController;
@@ -60,7 +61,8 @@ class LoginBLoC {
   Stream<String> get getInvalidString => _invalidStringUpdateStream;
 
   /// Use this stream to get whether data is loading
-  Stream<bool> get getWhetherLoading => _isLoadingValueUpdateStream;
+  Stream<NetworkLoadingType> get getWhetherLoading =>
+      _isLoadingValueUpdateStream;
 
   /// Constructor. Takes [browserCookies] value.
   /// To create new session use [LoginBLoC(Map())] or something similar.
@@ -88,8 +90,7 @@ class LoginBLoC {
 
   /// Function to update [_username]
   void _handleUsernameChanged(String usernameText) {
-      this._username = usernameText;
-
+    this._username = usernameText;
   }
 
   /// Function to update [_password]
@@ -108,11 +109,15 @@ class LoginBLoC {
 
     if (useSavedUser == LoginType.useStoredCredentials) {
       // Load saved data
-      loginUsername = await storage.readData(DataPersist.usernameSaveKey) ?? "";
-      loginPassword = await storage.readData(DataPersist.passwordSaveKey) ?? "";
+      loginUsername = await storage.readData(DataPersist.usernameSaveKey);
+      loginPassword = await storage.readData(DataPersist.passwordSaveKey);
     } else {
       loginUsername = this._username;
       loginPassword = this._password;
+    }
+
+    if (loginUsername == null || loginPassword == null) {
+      return;
     }
 
     if (loginUsername == "" || loginPassword == "") {
@@ -120,7 +125,7 @@ class LoginBLoC {
       return;
     }
 
-    _isLoadingValueUpdateStream.add(true);
+    _isLoadingValueUpdateStream.add(NetworkLoadingType.loadingFromInternet);
     try {
       // Get request body using username and password
       // Send POST request
@@ -140,7 +145,7 @@ class LoginBLoC {
           .then((response) => response.body.contains("USAGE"));
     } catch (e) {
       _invalidStringUpdateStream.add("Network Error");
-      _isLoadingValueUpdateStream.add(false);
+      _isLoadingValueUpdateStream.add(NetworkLoadingType.doneLoading);
       return;
     }
 
@@ -149,6 +154,6 @@ class LoginBLoC {
     } else {
       _invalidStringUpdateStream.add("Invalid Field");
     }
-    _isLoadingValueUpdateStream.add(false);
+    _isLoadingValueUpdateStream.add(NetworkLoadingType.doneLoading);
   }
 }
