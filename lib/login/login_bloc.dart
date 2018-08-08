@@ -9,6 +9,11 @@ enum LoginType { useStoredCredentials, useCurrentCredentials }
 
 enum NetworkLoadingType { loadingFromInternet, doneLoading }
 
+enum NavigationFromLoginPage { noNavigation, navigateToInfoPage }
+
+const String postUrl = "http://www.lankabell.com/lte/home1.jsp";
+const String usageUrl = "http://www.lankabell.com/lte/usage.jsp";
+
 /// Business Logic Component to Login page.
 /// This will,
 /// - capture texts in username, password text fields
@@ -48,6 +53,9 @@ class LoginBLoC {
   final _isLoadingValueUpdateStream = BehaviorSubject<NetworkLoadingType>(
       seedValue: NetworkLoadingType.doneLoading);
 
+  final _navigationControlStream = BehaviorSubject<NavigationFromLoginPage>(
+      seedValue: NavigationFromLoginPage.noNavigation);
+
   /// Add to this sink to login using a [username] and a [password]
   Sink<LoginType> get logIn => _loginController;
 
@@ -63,6 +71,9 @@ class LoginBLoC {
   /// Use this stream to get whether data is loading
   Stream<NetworkLoadingType> get getWhetherLoading =>
       _isLoadingValueUpdateStream;
+
+  Stream<NavigationFromLoginPage> get navigationControl =>
+      _navigationControlStream;
 
   /// Constructor. Takes [browserCookies] value.
   /// To create new session use [LoginBLoC(Map())] or something similar.
@@ -86,12 +97,12 @@ class LoginBLoC {
     _passwordTextChangeController.close();
     _invalidStringUpdateStream.close();
     _isLoadingValueUpdateStream.close();
+    _navigationControlStream.close();
   }
 
   /// Function to update [_username]
-  void _handleUsernameChanged(String usernameText) {
-    this._username = usernameText;
-  }
+  void _handleUsernameChanged(String usernameText) =>
+      this._username = usernameText;
 
   /// Function to update [_password]
   void _handlePasswordChanged(String passwordText) =>
@@ -130,7 +141,7 @@ class LoginBLoC {
       // Get request body using username and password
       // Send POST request
       await _virtualBrowser.pagePOST(
-        url: browser.Browser.postUrl,
+        url: postUrl,
         body: {
           "logName": loginUsername,
           "password": loginPassword,
@@ -141,7 +152,7 @@ class LoginBLoC {
       // Send a GET request to confirm login
       // If logged in response will have usage page data
       isLoggedIn = await _virtualBrowser
-          .pageGET(url: browser.Browser.usageUrl)
+          .pageGET(url: usageUrl)
           .then((response) => response.body.contains("USAGE"));
     } catch (e) {
       _invalidStringUpdateStream.add("Network Error");
@@ -151,6 +162,7 @@ class LoginBLoC {
 
     if (isLoggedIn) {
       storage.saveData(username: loginUsername, password: loginPassword);
+      _navigationControlStream.add(NavigationFromLoginPage.navigateToInfoPage);
     } else {
       _invalidStringUpdateStream.add("Invalid Field");
     }

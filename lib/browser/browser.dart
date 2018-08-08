@@ -9,8 +9,6 @@ class Browser {
 
   Map<String, String> get cookies => this._headers;
 
-  static const String postUrl = "http://www.lankabell.com/lte/home1.jsp";
-  static const String usageUrl = "http://www.lankabell.com/lte/usage.jsp";
   static const Duration _kRequestTimeoutDuration = Duration(seconds: 5);
 
   Browser(this._headers);

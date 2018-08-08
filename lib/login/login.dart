@@ -1,4 +1,5 @@
 import 'package:bell4g_app/colors.dart';
+import 'package:bell4g_app/info.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bell4g_app/login/login_bloc.dart';
@@ -35,6 +36,7 @@ class LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     widget.loginBloc.init();
+    widget.loginBloc.navigationControl.listen(_handleNavigation);
   }
 
   @override
@@ -74,9 +76,8 @@ class LoginPageState extends State<LoginPage> {
           icon: Icons.person,
           isPassword: false,
           invalidText: invalidTextSnapshot?.data,
-          onSubmit: () =>
-              widget.loginBloc.logIn.add(LoginType.useCurrentCredentials),
-          changeApplyFunc: (s) => widget.loginBloc.updateUsername.add(s),
+          onSubmit: _handleLoginAction,
+          changeApplyFunc: _handleUsernameChangeAction,
         );
       },
     );
@@ -93,9 +94,8 @@ class LoginPageState extends State<LoginPage> {
           icon: Icons.lock_outline,
           isPassword: true,
           invalidText: invalidTextSnapshot?.data,
-          onSubmit: () =>
-              widget.loginBloc.logIn.add(LoginType.useCurrentCredentials),
-          changeApplyFunc: (s) => widget.loginBloc.updatePassword.add(s),
+          onSubmit: _handleLoginAction,
+          changeApplyFunc: _handlePasswordChangeAction,
         );
       },
     );
@@ -111,11 +111,44 @@ class LoginPageState extends State<LoginPage> {
         child: RaisedButton.icon(
           icon: Icon(Icons.arrow_forward),
           label: Text("Next"),
-          onPressed: () =>
-              widget.loginBloc.logIn.add(LoginType.useCurrentCredentials),
+          onPressed: _handleLoginAction,
         ),
       ),
     );
+  }
+
+  void _handleLoginAction() {
+    widget.loginBloc.logIn.add(LoginType.useCurrentCredentials);
+  }
+
+  void _handleUsernameChangeAction(str) {
+    widget.loginBloc.updateUsername.add(str);
+  }
+
+  void _handlePasswordChangeAction(str) {
+    widget.loginBloc.updatePassword.add(str);
+  }
+
+  void _handleNavigation(NavigationFromLoginPage control) {
+    if (control == NavigationFromLoginPage.navigateToInfoPage) {
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+            pageBuilder: (_, __, ___) {
+              return DataUsageInfo(null, null);
+            },
+            transitionsBuilder:
+                (_, Animation<double> animation, __, Widget child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                        begin: Offset(1.0, 0.0), end: Offset(0.0, 0.0))
+                    .animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: Duration(milliseconds: 500)),
+      );
+    }
   }
 }
 
