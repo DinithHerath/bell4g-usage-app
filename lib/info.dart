@@ -7,7 +7,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:bell4g_app/colors.dart';
 import 'package:bell4g_app/browser.dart';
-import 'package:bell4g_app/startup.dart';
 import 'package:bell4g_app/transition_maker.dart';
 
 const String CHART_USED_KEY = 'Used';
@@ -351,12 +350,12 @@ class DataUsageInfoState extends State<DataUsageInfo>
 
   /// Logout
   void _handleOnPressedLogout() {
-    widget.browser.clearCookie();
-    TransitionMaker
-        .slideTransition(
-            destinationPageCall: () =>
-                StartUpPage(widget.browser, widget.theme))
-        .startNoBack(context);
+    // widget.browser.clearCookie();
+    // TransitionMaker
+    //     .slideTransition(
+    //         destinationPageCall: () =>
+    //             StartUpPage(widget.browser, widget.theme))
+        // .startNoBack(context);
   }
 
   /// Refreshing FAB action

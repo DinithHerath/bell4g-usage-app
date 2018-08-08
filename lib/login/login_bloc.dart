@@ -5,11 +5,18 @@ import 'package:rxdart/rxdart.dart';
 import 'package:bell4g_app/browser/browser.dart' as browser;
 import 'package:bell4g_app/storage/data_persist.dart';
 
+enum LoginType{
+  useStoredCredentials, useCurrentCredentials
+}
+
 /// Business Logic Component to Login page.
 /// This will,
 /// - capture texts in username, password text fields
 /// - issue values concerning entered text is invalid or loading
 /// - login using saved username/password of entered username.password
+/// 
+/// FIXME: When state updates through hot reload, [_username] and [_password] empties
+/// even though [TextBox] doesn't. So tapping on [Next] will cause in `Empty Field`.
 class LoginBLoC {
   /// Virtual browser variable used. Will load cookies as given through the constructor
   browser.Browser _virtualBrowser;
@@ -23,7 +30,7 @@ class LoginBLoC {
 
   /// Stream which is used to notify login event.
   /// Can give whether to use saved password or text box password.
-  final _loginController = StreamController<bool>();
+  final _loginController = StreamController<LoginType>();
 
   /// [StreamController] to update value of [_username].
   final _usernameTextChangeController = StreamController<String>();
@@ -41,7 +48,7 @@ class LoginBLoC {
   final _isLoadingValueUpdateStream = BehaviorSubject<bool>(seedValue: false);
 
   /// Add to this sink to login using a [username] and a [password]
-  Sink<bool> get logIn => _loginController;
+  Sink<LoginType> get logIn => _loginController;
 
   /// Add to this sink to change [_username]
   Sink<String> get updateUsername => _usernameTextChangeController;
@@ -64,6 +71,11 @@ class LoginBLoC {
     _passwordTextChangeController.stream.listen(_handlePasswordChanged);
   }
 
+  /// Try to log in using already present username and password
+  void init() {
+    _loginController.add(LoginType.useStoredCredentials);
+  }
+
   /// Dispose of all streams.
   /// **Call this when disposing.**
   void dispose() {
@@ -75,8 +87,10 @@ class LoginBLoC {
   }
 
   /// Function to update [_username]
-  void _handleUsernameChanged(String usernameText) =>
+  void _handleUsernameChanged(String usernameText) {
       this._username = usernameText;
+
+  }
 
   /// Function to update [_password]
   void _handlePasswordChanged(String passwordText) =>
@@ -86,13 +100,13 @@ class LoginBLoC {
   /// which means that this will take care when a new login is requested.
   /// if [useSavedUser] is [true], this will get username and password
   /// from storage and try to login
-  void _handleLoginRequested(bool useSavedUser) async {
+  void _handleLoginRequested(LoginType useSavedUser) async {
     String loginUsername, loginPassword;
     bool isLoggedIn;
 
     _invalidStringUpdateStream.add(LoginBLoC.validInput);
 
-    if (useSavedUser) {
+    if (useSavedUser == LoginType.useStoredCredentials) {
       // Load saved data
       loginUsername = await storage.readData(DataPersist.usernameSaveKey) ?? "";
       loginPassword = await storage.readData(DataPersist.passwordSaveKey) ?? "";
@@ -102,7 +116,7 @@ class LoginBLoC {
     }
 
     if (loginUsername == "" || loginPassword == "") {
-      _invalidStringUpdateStream.add("Empty/Invalid Field");
+      _invalidStringUpdateStream.add("Empty Field");
       return;
     }
 
@@ -125,7 +139,7 @@ class LoginBLoC {
           .pageGET(url: browser.Browser.usageUrl)
           .then((response) => response.body.contains("USAGE"));
     } catch (e) {
-      _invalidStringUpdateStream.add("Please Check your network connection");
+      _invalidStringUpdateStream.add("Network Error");
       _isLoadingValueUpdateStream.add(false);
       return;
     }
@@ -133,7 +147,7 @@ class LoginBLoC {
     if (isLoggedIn) {
       storage.saveData(username: loginUsername, password: loginPassword);
     } else {
-      _invalidStringUpdateStream.add("Wrong username/password");
+      _invalidStringUpdateStream.add("Invalid Field");
     }
     _isLoadingValueUpdateStream.add(false);
   }

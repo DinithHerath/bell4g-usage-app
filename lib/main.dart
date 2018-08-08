@@ -1,8 +1,8 @@
+import 'package:bell4g_app/login/login.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bell4g_app/colors.dart';
 import 'package:bell4g_app/browser.dart';
-import 'package:bell4g_app/startup.dart';
 
 void main() {
   VirtualBrowser browser = VirtualBrowser();
@@ -14,7 +14,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Bell 4G Usage App',
-      home: StartUpPage(browser, theme),
+      home: Container(
+        child: LoginPage(),
+        color:theme.primaryColor,
+      ),
     );
   }
 

@@ -26,6 +26,12 @@ class LoginPageState extends State<LoginPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    widget.loginBloc.init();
+  }
+
+  @override
   void dispose() {
     super.dispose();
     widget.loginBloc.dispose();
@@ -42,7 +48,8 @@ class LoginPageState extends State<LoginPage> {
           icon: Icons.person,
           isPassword: false,
           invalidText: invalidTextSnapshot?.data,
-          onSubmit: () => widget.loginBloc.logIn.add(false),
+          onSubmit: () =>
+              widget.loginBloc.logIn.add(LoginType.useCurrentCredentials),
           changeApplyFunc: (s) => widget.loginBloc.updateUsername.add(s),
         );
       },
@@ -60,7 +67,8 @@ class LoginPageState extends State<LoginPage> {
           icon: Icons.lock_outline,
           isPassword: true,
           invalidText: invalidTextSnapshot?.data,
-          onSubmit: () => widget.loginBloc.logIn.add(false),
+          onSubmit: () =>
+              widget.loginBloc.logIn.add(LoginType.useCurrentCredentials),
           changeApplyFunc: (s) => widget.loginBloc.updatePassword.add(s),
         );
       },
@@ -88,7 +96,8 @@ class LoginPageState extends State<LoginPage> {
               RaisedButton.icon(
                 icon: Icon(Icons.arrow_forward),
                 label: Text("Next"),
-                onPressed: () => widget.loginBloc.logIn.add(false),
+                onPressed: () =>
+                    widget.loginBloc.logIn.add(LoginType.useCurrentCredentials),
               ),
             ],
           ),
