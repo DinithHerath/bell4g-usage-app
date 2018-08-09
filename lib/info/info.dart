@@ -1,3 +1,5 @@
+import 'package:bell4g_app/browser/bell4g.dart';
+import 'package:bell4g_app/info/info_bloc.dart';
 import 'package:flutter/material.dart';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -6,7 +8,13 @@ class DataUsageInfo extends StatefulWidget {
   @override
   DataUsageInfoState createState() => DataUsageInfoState();
 
-  DataUsageInfo();
+  final InfoBLoC infoBLoC = InfoBLoC();
+  final Map<String, String> cookies;
+
+  DataUsageInfo(this.cookies) {
+    this.infoBLoC.init();
+    this.infoBLoC.updateData.add(this.cookies);
+  }
 }
 
 class DataUsageInfoState extends State<DataUsageInfo>
@@ -27,6 +35,12 @@ class DataUsageInfoState extends State<DataUsageInfo>
         floatingActionButton: _buildFloatingActionButton(),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    widget.infoBLoC.dispose();
   }
 
   /// App Bar
@@ -218,46 +232,58 @@ class DataUsageInfoState extends State<DataUsageInfo>
 
   /// View data scraped from home page as tiles
   Widget _buildHomeDataTimes() {
-    return ListView(
-      children: <Widget>[
-        _buildInfoTile(
-            "[Please Wait]", "Activated Package", FontAwesomeIcons.shoppingBag),
-        _buildInfoTile(
-            "[Please Wait]", "Package Value", FontAwesomeIcons.shoppingCart),
-        _buildInfoTile(
-            "[Please Wait]", "Max Download Speed", FontAwesomeIcons.download),
-        _buildInfoTile(
-            "[Please Wait]", "Max Upload Speed", FontAwesomeIcons.upload),
-        _buildInfoTile(
-            "[Please Wait]", "Total Outstanding", FontAwesomeIcons.dollarSign),
-        _buildInfoTile(
-            "[Please Wait]", "Last Payment Amount", FontAwesomeIcons.wallet),
-        _buildInfoTile("[Please Wait]", "Last Payment Date and Time",
-            FontAwesomeIcons.calendar),
-      ],
-    );
+    return StreamBuilder(
+        stream: widget.infoBLoC.bell4GInfo,
+        builder: (_, infoSnapshot) {
+          Bell4GInfo bell4gInfo = infoSnapshot?.data ?? Bell4GInfo();
+          return ListView(
+            children: <Widget>[
+              _buildInfoTile(bell4gInfo.activatedPackage, "Activated Package",
+                  FontAwesomeIcons.shoppingBag),
+              _buildInfoTile(bell4gInfo.packageValue, "Package Value",
+                  FontAwesomeIcons.shoppingCart),
+              _buildInfoTile(bell4gInfo.packageDownSpeed, "Max Download Speed",
+                  FontAwesomeIcons.download),
+              _buildInfoTile(bell4gInfo.packageUpSpeed, "Max Upload Speed",
+                  FontAwesomeIcons.upload),
+              _buildInfoTile(bell4gInfo.totalOutstanding, "Total Outstanding",
+                  FontAwesomeIcons.dollarSign),
+              _buildInfoTile(bell4gInfo.lastPaymentAmount,
+                  "Last Payment Amount", FontAwesomeIcons.wallet),
+              _buildInfoTile(bell4gInfo.lastPaymentDate,
+                  "Last Payment Date and Time", FontAwesomeIcons.calendar),
+            ],
+          );
+        });
   }
 
   /// View data scraped from profile page as tiles
   Widget _buildProfileDataTiles() {
-    return ListView(
-      children: <Widget>[
-        _buildInfoTile("[Please Wait]", "Name", FontAwesomeIcons.userAlt),
-        _buildInfoTile("[Please Wait]", "E-mail", FontAwesomeIcons.googlePlusG),
-        _buildInfoTile(
-            "[Please Wait]", "Mobile Number", FontAwesomeIcons.mobile),
-        _buildInfoTile(
-            "[Please Wait]", "Address", FontAwesomeIcons.addressBook),
-        _buildInfoTile(
-            "[Please Wait]", "Directory Number", FontAwesomeIcons.phone),
-        _buildInfoTile(
-            "[Please Wait]", "Account Number", FontAwesomeIcons.userLock),
-        _buildInfoTile(
-            "[Please Wait]", "Active Package", FontAwesomeIcons.shoppingBasket),
-        _buildInfoTile("[Please Wait]", "Next Bill/Quota Issue Date",
-            FontAwesomeIcons.calendar),
-      ],
-    );
+    return StreamBuilder(
+        stream: widget.infoBLoC.bell4GInfo,
+        builder: (_, infoSnapshot) {
+          Bell4GInfo bell4gInfo = infoSnapshot?.data ?? Bell4GInfo();
+          return ListView(
+            children: <Widget>[
+              _buildInfoTile(
+                  bell4gInfo.profileName, "Name", FontAwesomeIcons.userAlt),
+              _buildInfoTile(bell4gInfo.profileEmail, "E-mail",
+                  FontAwesomeIcons.googlePlusG),
+              _buildInfoTile(bell4gInfo.profileMobileNumber, "Mobile Number",
+                  FontAwesomeIcons.mobile),
+              _buildInfoTile(bell4gInfo.profileAddress, "Address",
+                  FontAwesomeIcons.addressBook),
+              _buildInfoTile(bell4gInfo.profileDirectoryNumber,
+                  "Directory Number", FontAwesomeIcons.phone),
+              _buildInfoTile(bell4gInfo.profileAccountNumber, "Account Number",
+                  FontAwesomeIcons.userLock),
+              _buildInfoTile(bell4gInfo.profileActivePackage, "Active Package",
+                  FontAwesomeIcons.shoppingBasket),
+              _buildInfoTile(bell4gInfo.profileNextBillDate,
+                  "Next Bill/Quota Issue Date", FontAwesomeIcons.calendar),
+            ],
+          );
+        });
   }
 
   /// List Tiles to show information
@@ -275,7 +301,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
   void initState() {
     super.initState();
     refreshRotationAnimationController =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1));
+        AnimationController(vsync: this, duration: Duration(seconds: 1));
   }
 
   AnimationController refreshRotationAnimationController;

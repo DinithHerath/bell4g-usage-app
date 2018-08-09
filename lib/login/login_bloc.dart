@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'package:bell4g_app/browser/browser.dart' as browser;
@@ -10,6 +11,17 @@ enum LoginType { useStoredCredentials, useCurrentCredentials }
 enum NetworkLoadingType { loadingFromInternet, doneLoading }
 
 enum NavigationFromLoginPage { noNavigation, navigateToInfoPage }
+
+class NavigateFromData {
+  final NavigationFromLoginPage control;
+  final Map<String, String> cookies;
+
+  NavigateFromData({@required this.control, this.cookies});
+
+  factory NavigateFromData.empty() {
+    return NavigateFromData(control: NavigationFromLoginPage.noNavigation);
+  }
+}
 
 const String postUrl = "http://www.lankabell.com/lte/home1.jsp";
 const String usageUrl = "http://www.lankabell.com/lte/usage.jsp";
@@ -23,9 +35,6 @@ const String usageUrl = "http://www.lankabell.com/lte/usage.jsp";
 /// FIXME: When state updates through hot reload, [_username] and [_password] empties
 /// even though [TextBox] doesn't. So tapping on [Next] will cause in `Empty Field`.
 class LoginBLoC {
-  /// Virtual browser variable used. Will load cookies as given through the constructor
-  browser.Browser _virtualBrowser;
-
   /// Storage varibale to use. *Specific to flutter.*
   DataPersist storage = DataPersist();
 
@@ -53,8 +62,8 @@ class LoginBLoC {
   final _isLoadingValueUpdateStream = BehaviorSubject<NetworkLoadingType>(
       seedValue: NetworkLoadingType.doneLoading);
 
-  final _navigationControlStream = BehaviorSubject<NavigationFromLoginPage>(
-      seedValue: NavigationFromLoginPage.noNavigation);
+  final _navigationControlStream =
+      BehaviorSubject<NavigateFromData>(seedValue: NavigateFromData.empty());
 
   /// Add to this sink to login using a [username] and a [password]
   Sink<LoginType> get logIn => _loginController;
@@ -72,13 +81,11 @@ class LoginBLoC {
   Stream<NetworkLoadingType> get getWhetherLoading =>
       _isLoadingValueUpdateStream;
 
-  Stream<NavigationFromLoginPage> get navigationControl =>
-      _navigationControlStream;
+  Stream<NavigateFromData> get navigationControl => _navigationControlStream;
 
   /// Constructor. Takes [browserCookies] value.
   /// To create new session use [LoginBLoC(Map())] or something similar.
-  LoginBLoC(Map<String, String> browserCookies) {
-    _virtualBrowser = browser.Browser.fromCookies(browserCookies);
+  LoginBLoC() {
     _loginController.stream.listen(_handleLoginRequested);
     _usernameTextChangeController.stream.listen(_handleUsernameChanged);
     _passwordTextChangeController.stream.listen(_handlePasswordChanged);
@@ -116,6 +123,8 @@ class LoginBLoC {
     String loginUsername, loginPassword;
     bool isLoggedIn;
 
+    browser.Browser virtualBrowser = browser.Browser.createNew();
+
     _invalidStringUpdateStream.add(LoginBLoC.validInput);
 
     if (useSavedUser == LoginType.useStoredCredentials) {
@@ -140,7 +149,7 @@ class LoginBLoC {
     try {
       // Get request body using username and password
       // Send POST request
-      await _virtualBrowser.pagePOST(
+      await virtualBrowser.pagePOST(
         url: postUrl,
         body: {
           "logName": loginUsername,
@@ -150,8 +159,8 @@ class LoginBLoC {
         },
       );
       // Send a GET request to confirm login
-      // If logged in response will have usage page data
-      isLoggedIn = await _virtualBrowser
+      // If logged in response will have usage page data 
+      isLoggedIn = await virtualBrowser
           .pageGET(url: usageUrl)
           .then((response) => response.body.contains("USAGE"));
     } catch (e) {
@@ -162,7 +171,10 @@ class LoginBLoC {
 
     if (isLoggedIn) {
       storage.saveData(username: loginUsername, password: loginPassword);
-      _navigationControlStream.add(NavigationFromLoginPage.navigateToInfoPage);
+      NavigateFromData navigateData = NavigateFromData(
+          control: NavigationFromLoginPage.navigateToInfoPage,
+          cookies: virtualBrowser.cookies);
+      _navigationControlStream.add(navigateData);
     } else {
       _invalidStringUpdateStream.add("Invalid Field");
     }

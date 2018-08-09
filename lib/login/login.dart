@@ -1,10 +1,10 @@
-import 'package:bell4g_app/info.dart';
+import 'package:bell4g_app/info/info.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bell4g_app/login/login_bloc.dart';
 
 class LoginPage extends StatefulWidget {
-  final LoginBLoC loginBloc = LoginBLoC(Map());
+  final LoginBLoC loginBLoC = LoginBLoC();
 
   @override
   LoginPageState createState() => LoginPageState();
@@ -37,19 +37,19 @@ class LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    widget.loginBloc.init();
-    widget.loginBloc.navigationControl.listen(_handleNavigation);
+    widget.loginBLoC.init();
+    widget.loginBLoC.navigationControl.listen(_handleNavigation);
   }
 
   @override
   void dispose() {
     super.dispose();
-    widget.loginBloc.dispose();
+    widget.loginBLoC.dispose();
   }
 
   Widget _buildTopLoadingLayer() {
     return StreamBuilder<NetworkLoadingType>(
-      stream: widget.loginBloc.getWhetherLoading,
+      stream: widget.loginBLoC.getWhetherLoading,
       builder: (_, isLoadingSnapshot) {
         return (isLoadingSnapshot?.data != null &&
                 isLoadingSnapshot.data == NetworkLoadingType.doneLoading)
@@ -69,7 +69,7 @@ class LoginPageState extends State<LoginPage> {
   /// Username Text Field
   Widget _buildUsernameText() {
     return StreamBuilder<String>(
-      stream: widget.loginBloc.getInvalidString,
+      stream: widget.loginBLoC.getInvalidString,
       builder: (_, invalidTextSnapshot) {
         return TextBoxWidget(
           hintText: "Username",
@@ -87,7 +87,7 @@ class LoginPageState extends State<LoginPage> {
   /// Password Text Field
   Widget _buildPasswordText() {
     return StreamBuilder<String>(
-      stream: widget.loginBloc.getInvalidString,
+      stream: widget.loginBLoC.getInvalidString,
       builder: (_, invalidTextSnapshot) {
         return TextBoxWidget(
           hintText: "Password",
@@ -119,24 +119,24 @@ class LoginPageState extends State<LoginPage> {
   }
 
   void _handleLoginAction() {
-    widget.loginBloc.logIn.add(LoginType.useCurrentCredentials);
+    widget.loginBLoC.logIn.add(LoginType.useCurrentCredentials);
   }
 
   void _handleUsernameChangeAction(str) {
-    widget.loginBloc.updateUsername.add(str);
+    widget.loginBLoC.updateUsername.add(str);
   }
 
   void _handlePasswordChangeAction(str) {
-    widget.loginBloc.updatePassword.add(str);
+    widget.loginBLoC.updatePassword.add(str);
   }
 
-  void _handleNavigation(NavigationFromLoginPage control) {
-    if (control == NavigationFromLoginPage.navigateToInfoPage) {
+  void _handleNavigation(NavigateFromData navigationData) {
+    if (navigationData.control == NavigationFromLoginPage.navigateToInfoPage) {
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
             pageBuilder: (_, __, ___) {
-              return DataUsageInfo();
+              return DataUsageInfo(navigationData.cookies);
             },
             transitionsBuilder:
                 (_, Animation<double> animation, __, Widget child) {
