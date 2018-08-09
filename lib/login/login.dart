@@ -135,7 +135,7 @@ class LoginPageState extends State<LoginPage> {
         context,
         PageRouteBuilder(
             pageBuilder: (_, __, ___) {
-              return DataUsageInfo(null, null);
+              return DataUsageInfo();
             },
             transitionsBuilder:
                 (_, Animation<double> animation, __, Widget child) {
