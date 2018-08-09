@@ -1,4 +1,3 @@
-import 'package:bell4g_app/colors.dart';
 import 'package:bell4g_app/info.dart';
 import 'package:flutter/material.dart';
 
@@ -15,20 +14,23 @@ class LoginPageState extends State<LoginPage> {
   /// Dialog builder. The main interface.
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        SimpleDialog(
-          children: <Widget>[
-            // Divider between title and Content
-            _buildUsernameText(),
-            _buildPasswordText(),
-            _buildButton(),
-          ],
-          // Title
-          title: Text("Login to Continue"),
-        ),
-        _buildTopLoadingLayer(),
-      ],
+    return Container(
+      color: Theme.of(context).primaryColor,
+      child: Stack(
+        children: <Widget>[
+          SimpleDialog(
+            children: <Widget>[
+              // Divider between title and Content
+              _buildUsernameText(),
+              _buildPasswordText(),
+              _buildButton(),
+            ],
+            // Title
+            title: Text("Login to Continue"),
+          ),
+          _buildTopLoadingLayer(),
+        ],
+      ),
     );
   }
 
@@ -54,10 +56,9 @@ class LoginPageState extends State<LoginPage> {
             ? Container()
             : Opacity(
                 child: Container(
-                  color: ColorTheme().primaryColor,
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  alignment: Alignment.center,
+                  child: CircularProgressIndicator(),
+                  color: Theme.of(context).primaryColor,
                 ),
                 opacity: 0.8,
               );

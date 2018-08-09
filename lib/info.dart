@@ -24,18 +24,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
             _buildProfileDataTiles(),
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          child: RotationTransition(
-            child: Icon(
-              Icons.refresh,
-            ),
-            turns: Tween(begin: 0.0, end: 1.0)
-                .animate(refreshRotationAnimationController),
-          ),
-          onPressed: () {
-            print("Refreshes Data");
-          },
-        ),
+        floatingActionButton: _buildFloatingActionButton(),
       ),
     );
   }
@@ -44,18 +33,8 @@ class DataUsageInfoState extends State<DataUsageInfo>
   AppBar _buildAppBar() {
     return AppBar(
       title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
-          FlatButton.icon(
-            label: Text("Theme Name"),
-            icon: Icon(Icons.sync),
-            onPressed: () {
-              print(
-                  "Refreshes Chart data (To switch colors). This also calls setState() so no need to call again");
-              // Refreshes Chart data (To switch colors)
-              // This also calls setState() so no need to call again
-            },
-          ),
           FlatButton.icon(
             label: Text("Sign Out"),
             icon: Icon(FontAwesomeIcons.signOutAlt),
@@ -72,6 +51,22 @@ class DataUsageInfoState extends State<DataUsageInfo>
           _buildTabItem(icon: Icons.person_pin),
         ],
       ),
+    );
+  }
+
+  /// Build the floating action button
+  FloatingActionButton _buildFloatingActionButton() {
+    return FloatingActionButton(
+      child: RotationTransition(
+        child: Icon(
+          Icons.refresh,
+        ),
+        turns: Tween(begin: 0.0, end: 1.0)
+            .animate(refreshRotationAnimationController),
+      ),
+      onPressed: () {
+        print("Refreshes Data");
+      },
     );
   }
 
@@ -140,8 +135,8 @@ class DataUsageInfoState extends State<DataUsageInfo>
           icon: Icon(FontAwesomeIcons.questionCircle),
           onPressed: () => showDialog(
                 builder: (_) => AboutDialog(
-                      applicationLegalese:
-                          "By kdsuneraavinash\nkdsuneraavinash@gmail.com",
+                      applicationLegalese: "By kdsuneraavinash\n"
+                          "kdsuneraavinash@gmail.com",
                       applicationName: "Bell 4G Data Usage",
                       applicationVersion: "0.3.0-alpha",
                     ),
@@ -157,46 +152,34 @@ class DataUsageInfoState extends State<DataUsageInfo>
     return Center(
       child: Column(
         children: <Widget>[
+          _buildSmallText("Remaining till new package"),
           _buildLargeText(
-            text: "14 DAYS",
+            text: "[DAYS]",
             fontSize: 68.0,
             fontWeight: FontWeight.w700,
             letterSpacing: 8.0,
           ),
           _buildLargeText(
-            text: "AND 14 HOURS",
+            text: "AND [HOURS]",
             fontSize: 24.0,
             fontWeight: FontWeight.w300,
             letterSpacing: 10.0,
           ),
-          _buildLargeText(
-            text: "Remaining till new package",
-            fontWeight: FontWeight.w400,
-            letterSpacing: 3.0,
-          ),
           SizedBox(height: 50.0),
+          _buildSmallText("Allocation per Day Time"),
           _buildLargeText(
-            text: "14.0 GB",
+            text: "[DAY]",
             fontWeight: FontWeight.w600,
             letterSpacing: 10.0,
             fontSize: 36.0,
           ),
-          _buildLargeText(
-            text: "Allocation per Day Time",
-            fontWeight: FontWeight.w400,
-            letterSpacing: 3.0,
-          ),
           SizedBox(height: 25.0),
+          _buildSmallText("Allocation per Night Time"),
           _buildLargeText(
-              text: "19.2 GB",
+              text: "[NIGHT]",
               fontWeight: FontWeight.w600,
               letterSpacing: 10.0,
               fontSize: 36.0),
-          _buildLargeText(
-            text: "Allocation per Night Time",
-            fontWeight: FontWeight.w400,
-            letterSpacing: 3.0,
-          ),
           SizedBox(height: 50.0),
         ],
       ),
@@ -205,9 +188,9 @@ class DataUsageInfoState extends State<DataUsageInfo>
 
   /// Text builder for [_buildRemainingDays]
   Widget _buildLargeText(
-      {String text,
-      FontWeight fontWeight,
-      double letterSpacing,
+      {@required String text,
+      FontWeight fontWeight = FontWeight.w400,
+      double letterSpacing = 3.0,
       double fontSize}) {
     return Text(
       text,
@@ -219,23 +202,38 @@ class DataUsageInfoState extends State<DataUsageInfo>
     );
   }
 
+  /// Text builder for Description of [_buildLargeText]
+  Widget _buildSmallText(String text) {
+    return Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontWeight: FontWeight.w400,
+          letterSpacing: 3.0,
+        ),
+      ),
+    );
+  }
+
   /// View data scraped from home page as tiles
   Widget _buildHomeDataTimes() {
     return ListView(
       children: <Widget>[
         _buildInfoTile(
-            "[null]", "Activated Package", FontAwesomeIcons.shoppingBag),
+            "[Please Wait]", "Activated Package", FontAwesomeIcons.shoppingBag),
         _buildInfoTile(
-            "[null]", "Package Value", FontAwesomeIcons.shoppingCart),
+            "[Please Wait]", "Package Value", FontAwesomeIcons.shoppingCart),
         _buildInfoTile(
-            "[null]", "Max Download Speed", FontAwesomeIcons.download),
-        _buildInfoTile("[null]", "Max Upload Speed", FontAwesomeIcons.upload),
+            "[Please Wait]", "Max Download Speed", FontAwesomeIcons.download),
         _buildInfoTile(
-            "[null]", "Total Outstanding", FontAwesomeIcons.dollarSign),
+            "[Please Wait]", "Max Upload Speed", FontAwesomeIcons.upload),
         _buildInfoTile(
-            "[null]", "Last Payment Amount", FontAwesomeIcons.wallet),
+            "[Please Wait]", "Total Outstanding", FontAwesomeIcons.dollarSign),
         _buildInfoTile(
-            "[null]", "Last Payment Date and Time", FontAwesomeIcons.calendar),
+            "[Please Wait]", "Last Payment Amount", FontAwesomeIcons.wallet),
+        _buildInfoTile("[Please Wait]", "Last Payment Date and Time",
+            FontAwesomeIcons.calendar),
       ],
     );
   }
@@ -244,16 +242,20 @@ class DataUsageInfoState extends State<DataUsageInfo>
   Widget _buildProfileDataTiles() {
     return ListView(
       children: <Widget>[
-        _buildInfoTile("[null]", "Name", FontAwesomeIcons.userAlt),
-        _buildInfoTile("[null]", "E-mail", FontAwesomeIcons.googlePlusG),
-        _buildInfoTile("[null]", "Mobile Number", FontAwesomeIcons.mobile),
-        _buildInfoTile("[null]", "Address", FontAwesomeIcons.addressBook),
-        _buildInfoTile("[null]", "Directory Number", FontAwesomeIcons.phone),
-        _buildInfoTile("[null]", "Account Number", FontAwesomeIcons.userLock),
+        _buildInfoTile("[Please Wait]", "Name", FontAwesomeIcons.userAlt),
+        _buildInfoTile("[Please Wait]", "E-mail", FontAwesomeIcons.googlePlusG),
         _buildInfoTile(
-            "[null]", "Active Package", FontAwesomeIcons.shoppingBasket),
+            "[Please Wait]", "Mobile Number", FontAwesomeIcons.mobile),
         _buildInfoTile(
-            "[null]", "Next Bill/Quota Issue Date", FontAwesomeIcons.calendar),
+            "[Please Wait]", "Address", FontAwesomeIcons.addressBook),
+        _buildInfoTile(
+            "[Please Wait]", "Directory Number", FontAwesomeIcons.phone),
+        _buildInfoTile(
+            "[Please Wait]", "Account Number", FontAwesomeIcons.userLock),
+        _buildInfoTile(
+            "[Please Wait]", "Active Package", FontAwesomeIcons.shoppingBasket),
+        _buildInfoTile("[Please Wait]", "Next Bill/Quota Issue Date",
+            FontAwesomeIcons.calendar),
       ],
     );
   }
@@ -262,10 +264,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
   Widget _buildInfoTile(String title, String value, IconData icon) {
     return ListTile(
       leading: CircleAvatar(
-        child: Icon(
-          icon,
-          size: 18.0,
-        ),
+        child: Icon(icon, size: 18.0),
       ),
       title: Text(title),
       subtitle: Text(value),

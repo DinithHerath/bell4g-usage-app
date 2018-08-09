@@ -14,3 +14,9 @@ android/.project
 android/app/.settings/
 android/app/.classpath
 android/app/.project
+
+# VS Code Settings
+.vscode/
+
+# Android run script
+emulator-run.bat
