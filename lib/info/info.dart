@@ -1,8 +1,10 @@
-import 'package:bell4g_app/browser/bell4g.dart';
-import 'package:bell4g_app/info/info_bloc.dart';
 import 'package:flutter/material.dart';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+import 'package:bell4g_app/browser/bell4g.dart';
+import 'package:bell4g_app/info/info_bloc.dart';
+import 'package:bell4g_app/login/login.dart';
 
 class DataUsageInfo extends StatefulWidget {
   @override
@@ -11,10 +13,7 @@ class DataUsageInfo extends StatefulWidget {
   final InfoBLoC infoBLoC = InfoBLoC();
   final Map<String, String> cookies;
 
-  DataUsageInfo(this.cookies) {
-    this.infoBLoC.init();
-    this.infoBLoC.updateData.add(this.cookies);
-  }
+  DataUsageInfo(this.cookies);
 }
 
 class DataUsageInfoState extends State<DataUsageInfo>
@@ -38,6 +37,16 @@ class DataUsageInfoState extends State<DataUsageInfo>
   }
 
   @override
+  void initState() {
+    super.initState();
+    widget.infoBLoC.init(widget.cookies);
+    refreshRotationAnimationController =
+        AnimationController(vsync: this, duration: Duration(seconds: 1));
+    widget.infoBLoC.isRefreshing.listen(_handleRefreshStateChanged);
+    widget.infoBLoC.navigationControl.listen(_handleNavigation);
+  }
+
+  @override
   void dispose() {
     super.dispose();
     widget.infoBLoC.dispose();
@@ -52,9 +61,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
           FlatButton.icon(
             label: Text("Sign Out"),
             icon: Icon(FontAwesomeIcons.signOutAlt),
-            onPressed: () {
-              print("Clears browser cookies and goes back to login page.");
-            },
+            onPressed: _handleLogout,
           )
         ],
       ),
@@ -78,9 +85,7 @@ class DataUsageInfoState extends State<DataUsageInfo>
         turns: Tween(begin: 0.0, end: 1.0)
             .animate(refreshRotationAnimationController),
       ),
-      onPressed: () {
-        print("Refreshes Data");
-      },
+      onPressed: _handlePageRefresh,
     );
   }
 
@@ -163,41 +168,46 @@ class DataUsageInfoState extends State<DataUsageInfo>
 
   /// Remaining days and data info
   Widget _buildRemainingDays() {
-    return Center(
-      child: Column(
-        children: <Widget>[
-          _buildSmallText("Remaining till new package"),
-          _buildLargeText(
-            text: "[DAYS]",
-            fontSize: 68.0,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 8.0,
-          ),
-          _buildLargeText(
-            text: "AND [HOURS]",
-            fontSize: 24.0,
-            fontWeight: FontWeight.w300,
-            letterSpacing: 10.0,
-          ),
-          SizedBox(height: 50.0),
-          _buildSmallText("Allocation per Day Time"),
-          _buildLargeText(
-            text: "[DAY]",
-            fontWeight: FontWeight.w600,
-            letterSpacing: 10.0,
-            fontSize: 36.0,
-          ),
-          SizedBox(height: 25.0),
-          _buildSmallText("Allocation per Night Time"),
-          _buildLargeText(
-              text: "[NIGHT]",
-              fontWeight: FontWeight.w600,
-              letterSpacing: 10.0,
-              fontSize: 36.0),
-          SizedBox(height: 50.0),
-        ],
-      ),
-    );
+    return StreamBuilder(
+        stream: widget.infoBLoC.usageInfo,
+        builder: (_, usageSnapshot) {
+          DataUsage dataUsage = usageSnapshot?.data ?? DataUsage.initial();
+          return Center(
+            child: Column(
+              children: <Widget>[
+                _buildSmallText("Remaining till new package"),
+                _buildLargeText(
+                  text: dataUsage.daysTillNewPackage,
+                  fontSize: 68.0,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 8.0,
+                ),
+                _buildLargeText(
+                  text: dataUsage.hoursTillNewPackage,
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.w300,
+                  letterSpacing: 10.0,
+                ),
+                SizedBox(height: 50.0),
+                _buildSmallText("Allocation per Day Time"),
+                _buildLargeText(
+                  text: dataUsage.allocationDayTime,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 10.0,
+                  fontSize: 36.0,
+                ),
+                SizedBox(height: 25.0),
+                _buildSmallText("Allocation per Night Time"),
+                _buildLargeText(
+                    text: dataUsage.allocationightTime,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 10.0,
+                    fontSize: 36.0),
+                SizedBox(height: 50.0),
+              ],
+            ),
+          );
+        });
   }
 
   /// Text builder for [_buildRemainingDays]
@@ -297,11 +307,42 @@ class DataUsageInfoState extends State<DataUsageInfo>
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    refreshRotationAnimationController =
-        AnimationController(vsync: this, duration: Duration(seconds: 1));
+  void _handleRefreshStateChanged(RefreshingState refresh) {
+    if (refresh == RefreshingState.refreshing) {
+      refreshRotationAnimationController.repeat();
+    } else {
+      refreshRotationAnimationController.stop();
+    }
+  }
+
+  void _handlePageRefresh() {
+    widget.infoBLoC.updateData.add(widget.cookies);
+  }
+
+  void _handleNavigation(NavigationFromInfoPage control) {
+    if (control == NavigationFromInfoPage.navigateToLoginPage) {
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+            pageBuilder: (_, __, ___) {
+              return LoginPage();
+            },
+            transitionsBuilder:
+                (_, Animation<double> animation, __, Widget child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                        begin: Offset(1.0, 0.0), end: Offset(0.0, 0.0))
+                    .animate(animation),
+                child: child,
+              );
+            },
+            transitionDuration: Duration(milliseconds: 500)),
+      );
+    }
+  }
+
+  void _handleLogout() {
+    widget.infoBLoC.logout.add(ShouldLogout.logout);
   }
 
   AnimationController refreshRotationAnimationController;

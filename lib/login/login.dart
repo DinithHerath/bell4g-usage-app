@@ -1,6 +1,6 @@
-import 'package:bell4g_app/info/info.dart';
 import 'package:flutter/material.dart';
 
+import 'package:bell4g_app/info/info.dart';
 import 'package:bell4g_app/login/login_bloc.dart';
 
 class LoginPage extends StatefulWidget {
@@ -118,17 +118,14 @@ class LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _handleLoginAction() {
-    widget.loginBLoC.logIn.add(LoginType.useCurrentCredentials);
-  }
+  void _handleLoginAction() =>
+      widget.loginBLoC.logIn.add(LoginType.useCurrentCredentials);
 
-  void _handleUsernameChangeAction(str) {
-    widget.loginBLoC.updateUsername.add(str);
-  }
+  void _handleUsernameChangeAction(str) =>
+      widget.loginBLoC.updateUsername.add(str);
 
-  void _handlePasswordChangeAction(str) {
-    widget.loginBLoC.updatePassword.add(str);
-  }
+  void _handlePasswordChangeAction(str) =>
+      widget.loginBLoC.updatePassword.add(str);
 
   void _handleNavigation(NavigateFromData navigationData) {
     if (navigationData.control == NavigationFromLoginPage.navigateToInfoPage) {

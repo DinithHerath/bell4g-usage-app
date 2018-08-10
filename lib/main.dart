@@ -1,5 +1,6 @@
-import 'package:bell4g_app/login/login.dart';
 import 'package:flutter/material.dart';
+
+import 'package:bell4g_app/login/login.dart';
 
 void main() {
   runApp(MyApp());
